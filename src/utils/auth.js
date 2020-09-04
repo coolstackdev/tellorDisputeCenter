@@ -32,31 +32,30 @@ export const providerOptions = {
   },
 };
 
-export const w3connect = async (web3Modal) => {
+export const w3connect = async (web3Modal, chainId) => {
   const provider = await web3Modal.connect();
   const web3 = new Web3(provider);
   const injectedChainId = await web3.eth.getChainId();
 
-  if (injectedChainId !== +process.env.REACT_APP_CHAIN_ID) {
+  if (injectedChainId !== chainId) {
     alert(
       `Please switch Web3 to the correct network and try signing in again. Detected network: ${
         getChainData(injectedChainId).network
       }, Required network: ${
-        getChainData(+process.env.REACT_APP_CHAIN_ID).network
+        getChainData(chainId).network
       }`,
     );
     throw new Error(
-      `Injected web3 chainId: ${injectedChainId}, config: ${+process.env
-        .REACT_APP_CHAIN_ID}`,
+      `Injected web3 chainId: ${injectedChainId}, config: ${chainId}`,
     );
   }
 
   return { web3Modal, web3, provider };
 };
 
-export const signInWithWeb3 = async () => {
+export const signInWithWeb3 = async (chainId) => {
   const web3Modal = new Web3Modal({
-    network: getChainData(+process.env.REACT_APP_CHAIN_ID).network, // optional
+    network: getChainData(chainId).network, // optional
     providerOptions, // required
     cacheProvider: true,
   });
@@ -65,15 +64,14 @@ export const signInWithWeb3 = async () => {
   const web3 = new Web3(provider);
   const injectedChainId = await web3.eth.getChainId();
 
-  if (injectedChainId !== +process.env.REACT_APP_CHAIN_ID) {
+  if (injectedChainId !== chainId) {
     alert(
       `Please switch Web3 to the correct network and try signing in again. Detected network: ${getChainIdName(
         injectedChainId,
-      )}, Required network: ${getChainIdName(+process.env.REACT_APP_CHAIN_ID)}`,
+      )}, Required network: ${getChainIdName(chainId)}`,
     );
     throw new Error(
-      `Injected web3 chainId: ${injectedChainId}, config: ${+process.env
-        .REACT_APP_CHAIN_ID}`,
+      `Injected web3 chainId: ${injectedChainId}, config: ${chainId}`,
     );
   }
 

@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useContext } from 'react';
+import { DefaultNetContext } from 'contexts/Store';
+
 
 const EtherscanLink = ({ txHash }) => {
-  const uri =
-    process.env.REACT_APP_NETWORK_ID === '1'
+  const [defaultNet] = useContext(DefaultNetContext);
+
+  const uri = defaultNet === 'mainnet'
       ? 'https://etherscan.io/tx/'
       : 'https://rinkeby.etherscan.io/tx/';
 

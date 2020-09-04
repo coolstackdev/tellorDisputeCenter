@@ -9,6 +9,7 @@ import { Web3SignIn } from './Web3SignIn';
 import { truncateAddr } from '../../utils/helpers';
 import tellorLogoDark from '../../assets/Tellor__Logo--Dark.png';
 import ModeSwitcher from './ModeSwitcher';
+import NetSwitcher from './NetSwitcher';
 
 const HeaderNav = () => {
   const { Header } = Layout;
@@ -25,6 +26,7 @@ const HeaderNav = () => {
           </Link>
         </div>
         <div className="Header__Nav">
+          <NetSwitcher />
           <ModeSwitcher setLogo={setLogo} />
           <Link to="/disputes">Disputes</Link>
           <Link to="/mining">Mining</Link>

@@ -13,6 +13,7 @@ export const OpenDisputesContext = createContext();
 export const CurrentUserContext = createContext();
 export const Web3ModalContext = createContext();
 export const ModeContext = createContext();
+export const DefaultNetContext = createContext();
 
 const Store = ({ children }) => {
   const [contract, setContract] = useState();
@@ -23,9 +24,18 @@ const Store = ({ children }) => {
       ? tellorLoaderLight
       : tellorLoaderDark,
   );
+  const [defaultNet, setDefaultNet] = useState(
+    window.localStorage.getItem('defaultNet') === 'rinkeby'
+      ? 'rinkeby'
+      : 'mainnet',
+  );
   const [web3Modal, setWeb3Modal] = useState(
     new Web3Modal({
-      network: getChainData(+process.env.REACT_APP_CHAIN_ID).network, // optional
+      network: getChainData(
+        defaultNet === 'mainnet' 
+          ? +process.env.REACT_APP_CHAIN_ID
+          : +process.env.REACT_APP_RINKEBY_CHAIN_ID
+        ).network, // optional
       providerOptions, // required
       cacheProvider: true,
     }),
@@ -34,7 +44,12 @@ const Store = ({ children }) => {
   useEffect(() => {
     const initCurrentUser = async () => {
       try {
-        const w3c = await w3connect(web3Modal);
+        const w3c = await w3connect(
+          web3Modal,
+          defaultNet === 'mainnet'
+            ? +process.env.REACT_APP_CHAIN_ID
+            : +process.env.REACT_APP_RINKEBY_CHAIN_ID
+        );
         setWeb3Modal(w3c);
 
         const [account] = await w3c.web3.eth.getAccounts();
@@ -48,12 +63,17 @@ const Store = ({ children }) => {
     if (web3Modal.cachedProvider) {
       initCurrentUser();
     }
-  }, [web3Modal, currentUser]);
+  }, [web3Modal, currentUser, defaultNet]);
 
   useEffect(() => {
     const initContract = async (web3) => {
       try {
-        const tellorService = new TellorService(web3);
+        const tellorService = new TellorService(
+          web3,
+          defaultNet === 'mainnet'
+            ? process.env.REACT_APP_TELLOR_CONTRACT_ADDRESS
+            : process.env.REACT_APP_RINKEBY_TELLOR_CONTRACT_ADDRESS
+        );
         await tellorService.initContract();
         const disputeFee = await tellorService.getDisputeFee();
         setContract({ service: tellorService, disputeFee });
@@ -62,8 +82,8 @@ const Store = ({ children }) => {
       }
     };
 
-    initContract(web3Modal.web3 || new Web3(process.env.REACT_APP_INFURA_URI));
-  }, [web3Modal]);
+    initContract(web3Modal.web3 || new Web3(defaultNet === 'mainnet' ? process.env.REACT_APP_INFURA_URI : process.env.REACT_APP_RINKEBY_INFURA_URI));
+  }, [web3Modal, defaultNet]);
 
   useEffect(() => {
     const initCurrentUserBalance = async () => {
@@ -85,13 +105,15 @@ const Store = ({ children }) => {
     <Web3ModalContext.Provider value={[web3Modal, setWeb3Modal]}>
       <CurrentUserContext.Provider value={[currentUser, setCurrentUser]}>
         <ModeContext.Provider value={[mode, setMode]}>
-          <ContractContext.Provider value={[contract, setContract]}>
-            <OpenDisputesContext.Provider
-              value={[openDisputes, setOpenDisputes]}
-            >
-              {children}
-            </OpenDisputesContext.Provider>
-          </ContractContext.Provider>
+          <DefaultNetContext.Provider value={[defaultNet, setDefaultNet]}>
+            <ContractContext.Provider value={[contract, setContract]}>
+              <OpenDisputesContext.Provider
+                value={[openDisputes, setOpenDisputes]}
+              >
+                {children}
+              </OpenDisputesContext.Provider>
+            </ContractContext.Provider>
+          </DefaultNetContext.Provider>
         </ModeContext.Provider>
       </CurrentUserContext.Provider>
     </Web3ModalContext.Provider>
